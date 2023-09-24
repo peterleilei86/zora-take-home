@@ -1,12 +1,14 @@
 import {SearchIcon} from 'lucide-react'
 import {useRef, useState} from 'react'
 import {searchPhotos} from './api'
-import {SearchParams, Image} from './types'
+import {SearchParams, Image, Color} from './types'
 import {getImageData} from './utils'
 import {Input} from './components/ui/input'
 import {Skeleton} from './components/ui/skeleton'
 import {Search} from './Search'
 import {Button} from './components/ui/button'
+import {Sort} from './Sort'
+import {Filter} from './Filter'
 
 function App() {
 	const [images, setImages] = useState<Image[]>([])
@@ -58,10 +60,34 @@ function App() {
 			.finally(() => setIsLoading(false))
 	}
 
+	const handleSort = (orderBy: 'latest' | 'relevant') => {
+		searchPhotos({...searchParams, orderBy, page: 1})
+			.then(({response}) => {
+				const imgs = response?.results?.map(getImageData) || []
+				setImages(imgs)
+				setSearchParams((old) => ({...old, orderBy, page: 1}))
+			})
+			.catch((e) => console.log(e))
+	}
+
+	const handleFilter = (color: Color) => {
+		searchPhotos({...searchParams, color, page: 1})
+			.then(({response}) => {
+				const imgs = response?.results?.map(getImageData) || []
+				setImages(imgs)
+				setSearchParams((old) => ({...old, color, page: 1}))
+			})
+			.catch((e) => console.log(e))
+	}
+
 	return (
 		<div className='container relative mx-auto'>
 			<div className='sticky top-0 z-10 flex flex-col items-center justify-center w-full gap-4 p-6 bg-white md:flex-row'>
 				<Search onSubmit={handleSubmit} />
+				<div className='flex items-center w-full gap-2 md:w-1/2'>
+					<Sort onSort={handleSort} />
+					<Filter onFilter={handleFilter} />
+				</div>
 			</div>
 			{error && !isLoading && (
 				<p className='text-center text-red-500'>{error}</p>

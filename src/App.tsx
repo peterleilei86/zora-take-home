@@ -6,6 +6,7 @@ import {getImageData} from './utils'
 import {Input} from './components/ui/input'
 import {Skeleton} from './components/ui/skeleton'
 import {Search} from './Search'
+import {Button} from './components/ui/button'
 
 function App() {
 	const [images, setImages] = useState<Image[]>([])
@@ -17,6 +18,7 @@ function App() {
 	})
 	const [error, setError] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
+	const [totalPages, setTotalPages] = useState(0)
 
 	const handleSubmit = (query: string) => {
 		if (!query) return
@@ -31,12 +33,26 @@ function App() {
 					if (imgs.length === 0) {
 						setError('No images found')
 						setImages([])
+						setTotalPages(0)
 					} else {
 						setImages(imgs)
 						setSearchParams((old) => ({...old, query, page: 1}))
+						setTotalPages(data.response.total_pages)
 						setError('')
 					}
 				}
+			})
+			.catch((e) => console.log(e))
+			.finally(() => setIsLoading(false))
+	}
+
+	const handleLoadMore = () => {
+		setIsLoading(true)
+		searchPhotos({...searchParams, page: searchParams.page + 1})
+			.then(({response}) => {
+				const imgs = response?.results?.map(getImageData) || []
+				setImages((old) => [...old, ...imgs])
+				setSearchParams((old) => ({...old, page: old.page + 1}))
 			})
 			.catch((e) => console.log(e))
 			.finally(() => setIsLoading(false))
@@ -65,6 +81,13 @@ function App() {
 							/>
 						)
 					})}
+				</div>
+			)}
+			{images.length > 0 && searchParams.page < totalPages && (
+				<div className='m-4'>
+					<Button variant='outline' className='w-full' onClick={handleLoadMore}>
+						Load More
+					</Button>
 				</div>
 			)}
 			{isLoading && (

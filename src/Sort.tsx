@@ -15,7 +15,7 @@ export function Sort({
 }) {
 	return (
 		<Select onValueChange={onSort}>
-			<SelectTrigger className='w-1/2'>
+			<SelectTrigger data-testid='sort' className='w-1/2'>
 				<SelectValue placeholder='Sort by' />
 			</SelectTrigger>
 			<SelectContent>

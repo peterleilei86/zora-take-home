@@ -1,9 +1,7 @@
-import {SearchIcon} from 'lucide-react'
-import {useRef, useState} from 'react'
+import {useState} from 'react'
 import {searchPhotos} from './api'
 import {SearchParams, Image, Color} from './types'
 import {getImageData} from './utils'
-import {Input} from './components/ui/input'
 import {Skeleton} from './components/ui/skeleton'
 import {Search} from './Search'
 import {Button} from './components/ui/button'
@@ -25,9 +23,9 @@ function App() {
 	const handleSubmit = (query: string) => {
 		if (!query) return
 		setIsLoading(true)
-
 		searchPhotos({...searchParams, query, page: 1})
 			.then((data) => {
+				console.log(data)
 				if (data.errors) {
 					setError(data.errors[0])
 				} else {
@@ -79,6 +77,8 @@ function App() {
 			})
 			.catch((e) => console.log(e))
 	}
+
+	console.log(error)
 
 	return (
 		<div className='container relative mx-auto'>

@@ -5,6 +5,7 @@ import {SearchParams, Image} from './types'
 import {getImageData} from './utils'
 import {Input} from './components/ui/input'
 import {Skeleton} from './components/ui/skeleton'
+import {Search} from './Search'
 
 function App() {
 	const [images, setImages] = useState<Image[]>([])
@@ -17,11 +18,7 @@ function App() {
 	const [error, setError] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
 
-	const ref = useRef<HTMLInputElement>(null)
-	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-		e.preventDefault()
-
-		const query = ref.current?.value
+	const handleSubmit = (query: string) => {
 		if (!query) return
 		setIsLoading(true)
 
@@ -48,25 +45,11 @@ function App() {
 	return (
 		<div className='container relative mx-auto'>
 			<div className='sticky top-0 z-10 flex flex-col items-center justify-center w-full gap-4 p-6 bg-white md:flex-row'>
-				<form
-					data-testid='search-form'
-					className='w-full'
-					onSubmit={handleSubmit}
-				>
-					<div className='relative'>
-						<span className='absolute inset-y-0 left-0 flex items-center pl-2'>
-							<SearchIcon className='text-gray-400' />
-						</span>
-						<Input
-							ref={ref}
-							placeholder='Search...'
-							type='text'
-							className='pl-10 rounded-md outline-gray-400'
-						/>
-					</div>
-				</form>
+				<Search onSubmit={handleSubmit} />
 			</div>
-			{error && <p className='text-center text-red-500'>{error}</p>}
+			{error && !isLoading && (
+				<p className='text-center text-red-500'>{error}</p>
+			)}
 			{images.length > 0 && (
 				<div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
 					{images.map((img, i) => {

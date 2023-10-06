@@ -1,7 +1,7 @@
 import {searchPhotos} from '@/api'
 import {Color} from '@/types'
 import {getImageData} from '@/utils'
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {Image, SearchParams} from '../types'
 
 export function useFetch() {
@@ -16,12 +16,39 @@ export function useFetch() {
 	const [isLoading, setIsLoading] = useState(false)
 	const [totalPages, setTotalPages] = useState(0)
 
-	const handleSubmit = (query: string) => {
-		if (!query) return
+	const IMAGE_HEIGHT = 300
+
+	const handleInfiniteScroll = () => {
+		if (
+			window.innerHeight + document.documentElement.scrollTop + IMAGE_HEIGHT <
+				document.documentElement.offsetHeight ||
+			isLoading
+		) {
+			return
+		}
+
+		handleLoadMore()
+	}
+
+	useEffect(() => {
+		window.addEventListener('scroll', handleInfiniteScroll)
+
+		return () => {
+			window.removeEventListener('scroll', handleInfiniteScroll)
+		}
+	}, [isLoading])
+
+	const handleScrollToTop = () => {
+		window.scrollTo({top: 0, behavior: 'smooth'})
+	}
+
+	const loadData = (option: Partial<SearchParams>) => {
 		setIsLoading(true)
-		searchPhotos({...searchParams, query, page: 1})
+
+		const newParams = {...searchParams, ...option}
+
+		searchPhotos(newParams)
 			.then((data) => {
-				console.log(data)
 				if (data.errors) {
 					setError(data.errors[0])
 				} else {
@@ -29,60 +56,53 @@ export function useFetch() {
 					if (imgs.length === 0) {
 						setError('No images found')
 						setImages([])
+						setSearchParams(newParams)
 						setTotalPages(0)
 					} else {
-						setImages(imgs)
-						setSearchParams((old) => ({...old, query, page: 1}))
+						setImages((old) =>
+							newParams.page === 1 ? imgs : [...old, ...imgs]
+						)
+						setSearchParams(newParams)
 						setTotalPages(data.response.total_pages)
 						setError('')
 					}
 				}
 			})
 			.catch((e) => console.log(e))
-			.finally(() => setIsLoading(false))
+			.finally(() => {
+				if (newParams.page === 1) {
+					handleScrollToTop()
+				}
+				setIsLoading(false)
+			})
+	}
+
+	const handleSubmit = (query: string) => {
+		if (!query) return
+
+		loadData({query, page: 1})
 	}
 
 	const handleLoadMore = () => {
-		setIsLoading(true)
-		searchPhotos({...searchParams, page: searchParams.page + 1})
-			.then(({response}) => {
-				const imgs = response?.results?.map(getImageData) || []
-				setImages((old) => [...old, ...imgs])
-				setSearchParams((old) => ({...old, page: old.page + 1}))
-			})
-			.catch((e) => console.log(e))
-			.finally(() => setIsLoading(false))
+		if (searchParams.page < totalPages) {
+			loadData({page: searchParams.page + 1})
+		}
 	}
 
 	const handleSort = (orderBy: 'latest' | 'relevant') => {
-		searchPhotos({...searchParams, orderBy, page: 1})
-			.then(({response}) => {
-				const imgs = response?.results?.map(getImageData) || []
-				setImages(imgs)
-				setSearchParams((old) => ({...old, orderBy, page: 1}))
-			})
-			.catch((e) => console.log(e))
+		loadData({orderBy, page: 1})
 	}
 
 	const handleFilter = (color: Color) => {
-		searchPhotos({...searchParams, color, page: 1})
-			.then(({response}) => {
-				const imgs = response?.results?.map(getImageData) || []
-				setImages(imgs)
-				setSearchParams((old) => ({...old, color, page: 1}))
-			})
-			.catch((e) => console.log(e))
+		loadData({color, page: 1})
 	}
 
 	return {
 		images,
-		searchParams,
 		error,
 		isLoading,
-		totalPages,
 		handleSubmit,
 		handleSort,
 		handleFilter,
-		handleLoadMore,
 	}
 }

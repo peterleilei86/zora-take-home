@@ -1,23 +1,13 @@
 import {Skeleton} from './components/ui/skeleton'
 import {Search} from './Search'
-import {Button} from './components/ui/button'
 import {Sort} from './Sort'
 import {Filter} from './Filter'
 import {Gallery} from './Gallery'
 import {useFetch} from './hooks/useFetch'
 
 function App() {
-	const {
-		images,
-		error,
-		isLoading,
-		totalPages,
-		handleSubmit,
-		handleSort,
-		handleFilter,
-		handleLoadMore,
-		searchParams,
-	} = useFetch()
+	const {images, error, isLoading, handleSubmit, handleSort, handleFilter} =
+		useFetch()
 
 	return (
 		<div className='container relative mx-auto'>
@@ -32,13 +22,6 @@ function App() {
 				<p className='text-center text-red-500'>{error}</p>
 			)}
 			{images.length > 0 && <Gallery images={images} />}
-			{images.length > 0 && searchParams.page < totalPages && (
-				<div className='m-4'>
-					<Button variant='outline' className='w-full' onClick={handleLoadMore}>
-						Load More
-					</Button>
-				</div>
-			)}
 			{isLoading && (
 				<div data-testid='loading' className='flex w-full gap-4'>
 					<Skeleton className='w-1/3 h-[300px] rounded-md' />

@@ -18,19 +18,24 @@ export function useFetch() {
 
 	const IMAGE_HEIGHT = 300
 
-	const handleInfiniteScroll = () => {
-		if (
-			window.innerHeight + document.documentElement.scrollTop + IMAGE_HEIGHT <
-				document.documentElement.offsetHeight ||
-			isLoading
-		) {
-			return
+	const handleLoadMore = () => {
+		if (searchParams.page < totalPages) {
+			loadData({page: searchParams.page + 1})
 		}
-
-		handleLoadMore()
 	}
 
 	useEffect(() => {
+		const handleInfiniteScroll = () => {
+			if (
+				window.innerHeight + document.documentElement.scrollTop + IMAGE_HEIGHT <
+					document.documentElement.offsetHeight ||
+				isLoading
+			) {
+				return
+			}
+
+			handleLoadMore()
+		}
 		window.addEventListener('scroll', handleInfiniteScroll)
 
 		return () => {
@@ -81,12 +86,6 @@ export function useFetch() {
 		if (!query) return
 
 		loadData({query, page: 1})
-	}
-
-	const handleLoadMore = () => {
-		if (searchParams.page < totalPages) {
-			loadData({page: searchParams.page + 1})
-		}
 	}
 
 	const handleSort = (orderBy: 'latest' | 'relevant') => {
